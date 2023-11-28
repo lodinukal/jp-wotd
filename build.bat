@@ -1,1 +1,1 @@
-pyinstaller.exe app.py --onefile --windowed
+pyinstaller.exe app.py --onefile --windowed --add-data="words.csv:resources"
