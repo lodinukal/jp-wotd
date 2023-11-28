@@ -1,0 +1,39 @@
+- font: UD Digi Kyokasho N-B
+  id: 10
+  lock_colour: 48, 57, 64, 100
+  lookat: 0
+  main_text_colour: 250, 250, 250, 240
+  position:
+  - 1548
+  - 50
+  second_text_colour: 190, 190, 190, 240
+  size:
+  - 350
+  - 190
+  unlock_colour: 68, 77, 84, 120
+- font: UD Digi Kyokasho N-B
+  id: 580362
+  lock_colour: 48, 57, 64, 100
+  lookat: 3
+  main_text_colour: 250, 250, 250, 240
+  position:
+  - 1548
+  - 251
+  second_text_colour: 190, 190, 190, 240
+  size:
+  - 350
+  - 190
+  unlock_colour: 68, 77, 84, 120
+- font: UD Digi Kyokasho N-B
+  id: 348061
+  lock_colour: 48, 57, 64, 100
+  lookat: 3
+  main_text_colour: 250, 250, 250, 240
+  position:
+  - 1549
+  - 448
+  second_text_colour: 190, 190, 190, 240
+  size:
+  - 350
+  - 190
+  unlock_colour: 68, 77, 84, 120
