@@ -24,6 +24,7 @@ Pull requests are welcome, I don't plan to work on this project a lot.
 - Ctrl + L: Lock and unlock the window to be dragged around
 - Q: move to the previous word alternative for a window (up to 4)
 - E: move to the next word alternative for a window (up to 4)
+- Double click: go to Jisho
 
 ## Configuration
 

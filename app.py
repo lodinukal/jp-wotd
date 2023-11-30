@@ -6,6 +6,8 @@ from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import Qt, QPointF, QPoint
 
+import webbrowser
+
 import yaml
 
 import random
@@ -71,72 +73,53 @@ class VerticalLayout:
         self.ycount += widget.height() + stretch
 
 
-class FrameConfig:
-    def __init__(
-        self,
-        size=[300, 250],
-        font="Yu Mincho",
-        mtc="250, 250, 250, 240",
-        stc="190, 190, 190, 240",
-        lc="20, 20, 20, 100",
-        uc="50, 50, 50, 100",
-        pos=[1584, 50],
-        lookat=0,
-        id=0,
-    ):
-        self.size = list(size)
-        self.font = font
-        self.main_text_colour = mtc
-        self.second_text_colour = stc
-        self.lock_colour = lc
-        self.unlock_colour = uc
-        self.position = list(pos)
-        r = random.Random()
-        self.lookat = lookat
-        self.id = r.randrange(1, 1000000) if id == 0 else id
+def getDefaultFrameConfig():
+    r = random.Random()
+    return {
+        "size": [300, 250],
+        "font": "Yu Mincho",
+        "english_font": "Arial",
+        "main_text_colour": "250, 250, 250, 240",
+        "second_text_colour": "190, 190, 190, 240",
+        "lock_colour": "20, 20, 20, 100",
+        "unlock_colour": "50, 50, 50, 100",
+        "position": [10, 50],
+        "lookat": 0,
+        "id": r.randrange(1, 1000000),
+    }
 
-    def asDict(self):
-        return {
-            "size": self.size,
-            "font": self.font,
-            "main_text_colour": self.main_text_colour,
-            "second_text_colour": self.second_text_colour,
-            "lock_colour": self.lock_colour,
-            "unlock_colour": self.unlock_colour,
-            "position": self.position,
-            "lookat": self.lookat,
-            "id": self.id,
-        }
 
-    def fromDict(d):
-        return FrameConfig(
-            d["size"],
-            d["font"],
-            d["main_text_colour"],
-            d["second_text_colour"],
-            d["lock_colour"],
-            d["unlock_colour"],
-            d["position"],
-            d["lookat"],
-            d["id"],
-        )
+def ensureFrameProperties(fcg: dict):
+    copy = fcg.copy()
+    default = getDefaultFrameConfig()
+    for prop in default:
+        if prop not in fcg:
+            copy[prop] = default[prop]
+    return copy
 
-    def inheritFrom(fcg):
-        return FrameConfig(
-            fcg.size,
-            fcg.font,
-            fcg.main_text_colour,
-            fcg.second_text_colour,
-            fcg.lock_colour,
-            fcg.unlock_colour,
-        )
+
+def inheritFrameConfig(fcg):
+    new = getDefaultFrameConfig()
+    inherit_properties = [
+        "size",
+        "font",
+        "english_font",
+        "main_text_colour",
+        "second_text_colour",
+        "lock_colour",
+        "unlock_colour",
+    ]
+    for prop in inherit_properties:
+        if prop in fcg:
+            new[prop] = fcg[prop]
+    return new
 
 
 class Config:
-    frames: typing.List[FrameConfig]
+    frames: typing.List[dict]
 
     def default():
-        return Config([FrameConfig()])
+        return Config([getDefaultFrameConfig()])
 
     def __init__(self, frames):
         self.frames = frames
@@ -158,13 +141,13 @@ class Config:
     def asList(self):
         l = []
         for frame in self.frames:
-            l.append(frame.asDict())
+            l.append(frame)
         return l
 
     def fromList(o):
         l = []
         for frame in o:
-            l.append(FrameConfig.fromDict(frame))
+            l.append(ensureFrameProperties(frame))
         return Config(l)
 
 
@@ -177,8 +160,8 @@ class Frame(QWidget):
     def load(self):
         self.locked = True
 
-        self.move(self.config.position[0], self.config.position[1])
-        self.setFixedSize(self.config.size[0], self.config.size[1])
+        self.move(self.config["position"][0], self.config["position"][1])
+        self.setFixedSize(self.config["size"][0], self.config["size"][1])
         self.setWindowFlags(
             Qt.WindowType.WindowStaysOnBottomHint
             | Qt.WindowType.FramelessWindowHint
@@ -188,17 +171,22 @@ class Frame(QWidget):
 
         self.background = QFrame(self)
         self.background.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
-        self.background.setFixedSize(self.config.size[0], self.config.size[1])
+        self.background.setFixedSize(self.config["size"][0], self.config["size"][1])
 
-        self.fnt = QtGui.QFont(self.config.font, 30, 15)
+        self.fnt = QtGui.QFont(self.config["font"], 30, 15)
         self.fnt.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
-        self.fntlight = QtGui.QFont(self.config.font, 15, 10)
+        self.fntlight = QtGui.QFont(self.config["font"], 15, 10)
         self.fntlight.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
+
+        self.engfnt = QtGui.QFont(self.config["english_font"], 30, 15)
+        self.engfnt.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
+        self.engfntlight = QtGui.QFont(self.config["english_font"], 15, 10)
+        self.engfntlight.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
 
         vl = VerticalLayout()
 
         self.progress = QProgressBar(self.background)
-        self.progress.setFixedSize(self.config.size[0], 3)
+        self.progress.setFixedSize(self.config["size"][0], 3)
         self.progress.setValue(1)
         self.progress.setTextVisible(False)
         self.progress.setMaximum(4)
@@ -209,35 +197,35 @@ class Frame(QWidget):
         self.ttl = QLabel(self.background)
         self.ttl.setText("今日の単語")
         self.ttl.setFont(self.fntlight)
-        self.ttl.setFixedSize(self.config.size[0], 30)
+        self.ttl.setFixedSize(self.config["size"][0], 30)
 
         vl.addWidget(self.ttl, 5)
 
         self.word = QLabel(self.background)
         self.word.setText("座席")
         self.word.setFont(self.fnt)
-        self.word.setFixedSize(self.config.size[0], 50)
+        self.word.setFixedSize(self.config["size"][0], 50)
 
         vl.addWidget(self.word, 0)
 
         self.kana = QLabel(self.background)
         self.kana.setText("ざせき")
         self.kana.setFont(self.fntlight)
-        self.kana.setFixedSize(self.config.size[0], 30)
+        self.kana.setFixedSize(self.config["size"][0], 30)
 
         vl.addWidget(self.kana, 0)
 
         # self.romaji = QLabel(self.background)
         # self.romaji.setText("zaseki")
         # self.romaji.setFont(self.fntlight)
-        # self.romaji.setFixedSize(self.config.size[0], 30)
+        # self.romaji.setFixedSize(self.config["size"][0], 30)
 
         # vl.addWidget(self.romaji, 0)
 
         self.english = QLabel(self.background)
         self.english.setText("seat")
-        self.english.setFont(self.fntlight)
-        self.english.setFixedSize(self.config.size[0], 30)
+        self.english.setFont(self.engfntlight)
+        self.english.setFixedSize(self.config["size"][0], 30)
 
         vl.addWidget(self.english, 5)
 
@@ -246,7 +234,7 @@ class Frame(QWidget):
         self.updateText()
 
     def updateText(self):
-        wotd = getWordOfTheDay(self.config.id + self.config.lookat)
+        wotd = getWordOfTheDay(self.config["id"] + self.config["lookat"])
         self.word.setText(wotd["word"])
         self.kana.setText(wotd["kana"])
         # self.romaji.setText(wotd["romaji"])
@@ -255,26 +243,31 @@ class Frame(QWidget):
     def reload(self, config):
         self.config = config
 
-        self.move(self.config.position[0], self.config.position[1])
-        self.setFixedSize(self.config.size[0], self.config.size[1])
+        self.move(self.config["position"][0], self.config["position"][1])
+        self.setFixedSize(self.config["size"][0], self.config["size"][1])
 
-        self.background.setFixedSize(self.config.size[0], self.config.size[1])
+        self.background.setFixedSize(self.config["size"][0], self.config["size"][1])
 
-        self.fnt = QtGui.QFont(self.config.font, 30, 15)
+        self.fnt = QtGui.QFont(self.config["font"], 30, 15)
         self.fnt.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
-        self.fntlight = QtGui.QFont(self.config.font, 15, 10)
+        self.fntlight = QtGui.QFont(self.config["font"], 15, 10)
         self.fntlight.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
 
+        self.engfnt = QtGui.QFont(self.config["english_font"], 30, 15)
+        self.engfnt.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
+        self.engfntlight = QtGui.QFont(self.config["english_font"], 15, 10)
+        self.engfntlight.setStyleStrategy(QtGui.QFont.StyleStrategy.PreferQuality)
+
         self.ttl.setFont(self.fntlight)
-        self.ttl.setFixedSize(config.size[0], 30)
+        self.ttl.setFixedSize(config["size"][0], 30)
         self.word.setFont(self.fnt)
-        self.word.setFixedSize(config.size[0], 50)
+        self.word.setFixedSize(config["size"][0], 50)
         self.kana.setFont(self.fntlight)
-        self.kana.setFixedSize(config.size[0], 30)
+        self.kana.setFixedSize(config["size"][0], 30)
         # self.romaji.setFont(self.fntlight)
-        # self.romaji.setFixedSize(config.size[0], 30)
-        self.english.setFont(self.fntlight)
-        self.english.setFixedSize(config.size[0], 30)
+        # self.romaji.setFixedSize(config["size"][0], 30)
+        self.english.setFont(self.engfntlight)
+        self.english.setFixedSize(config["size"][0], 30)
 
         self.computeStyles()
         self.updateText()
@@ -283,6 +276,9 @@ class Frame(QWidget):
         if self.locked:
             return
         self.oldPos = event.globalPosition()
+
+    def mouseDoubleClickEvent(self, a0) -> None:
+        webbrowser.open("https://jisho.org/search/" + self.word.text())
 
     def mouseMoveEvent(self, event):
         if self.locked:
@@ -314,18 +310,18 @@ class Frame(QWidget):
                 a0.key() == Qt.Key.Key_W
                 and a0.modifiers() == Qt.KeyboardModifier.ControlModifier
             ):
-                self.app.deleteWindow(self.config.id)
+                self.app.deleteWindow(self.config["id"])
             if a0.key() == Qt.Key.Key_E:
-                self.config.lookat = (self.config.lookat + 1) % 4
-                self.progress.setValue(self.config.lookat + 1)
+                self.config["lookat"] = (self.config["lookat"] + 1) % 4
+                self.progress.setValue(self.config["lookat"] + 1)
                 self.updateText()
             if a0.key() == Qt.Key.Key_Q:
-                self.config.lookat = (self.config.lookat - 1) % 4
-                self.progress.setValue(self.config.lookat + 1)
+                self.config["lookat"] = (self.config["lookat"] - 1) % 4
+                self.progress.setValue(self.config["lookat"] + 1)
                 self.updateText()
 
     def moveEvent(self, a0: QtGui.QMoveEvent | None) -> None:
-        self.config.position = [self.x(), self.y()]
+        self.config["position"] = [self.x(), self.y()]
 
     def setlock(self, lock: bool):
         self.locked = lock
@@ -334,18 +330,18 @@ class Frame(QWidget):
     def computeStyles(self):
         style = ""
         if self.locked:
-            style += f"background-color: rgba({self.config.lock_colour});"
+            style += f"background-color: rgba({self.config['lock_colour']});"
         else:
-            style += f"background-color: rgba({self.config.unlock_colour});"
+            style += f"background-color: rgba({self.config['unlock_colour']});"
         self.background.setStyleSheet(style)
 
         style = ""
-        style += f"color: rgba({self.config.main_text_colour});"
+        style += f"color: rgba({self.config['main_text_colour']});"
         style += f"background-color: transparent;"
         self.word.setStyleSheet(style)
 
         style = ""
-        style += f"color: rgba({self.config.second_text_colour});"
+        style += f"color: rgba({self.config['second_text_colour']});"
         style += f"background-color: transparent;"
         self.ttl.setStyleSheet(style)
         self.kana.setStyleSheet(style)
@@ -354,7 +350,7 @@ class Frame(QWidget):
 
         style = ""
         style += f"QProgressBar {{background-color: rgba(1, 1, 1, 255);}}"
-        style += f"QProgressBar::chunk {{background-color: rgba({self.config.second_text_colour});}}"
+        style += f"QProgressBar::chunk {{background-color: rgba({self.config['second_text_colour']});}}"
         self.progress.setStyleSheet(style)
 
 
@@ -385,9 +381,9 @@ if __name__ == "__main__":
 
     windows = []
 
-    def newWindow(inherit: FrameConfig, qp: QPoint):
-        fcg = FrameConfig.inheritFrom(inherit)
-        fcg.position = [qp.x(), qp.y()]
+    def newWindow(inherit: dict, qp: QPoint):
+        fcg = inheritFrameConfig(inherit)
+        fcg["position"] = [qp.x(), qp.y()]
         config.frames.append(fcg)
         window = Frame(fcg)
         window.app = app
@@ -400,7 +396,7 @@ if __name__ == "__main__":
                 config.frames.pop(i)
                 break
         for i in range(len(windows)):
-            if windows[i].config.id == id:
+            if windows[i].config["id"] == id:
                 windows[i].close()
                 windows.pop(i)
                 break
