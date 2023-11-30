@@ -19,7 +19,8 @@ romaji = []  # 3
 english = []  # 3
 audio = []  # 14
 
-day = round(datetime.now().timestamp() / 86400)
+day = round(datetime.now().timestamp() / 86400) * 4
+print(day)
 
 
 def resource_path(relative_path):
@@ -373,9 +374,9 @@ class SendeventProcess(multiprocessing.Process):
 if __name__ == "__main__":
     # On Windows calling this function is necessary.
     # On Linux/OSX it does nothing.
-    multiprocessing.freeze_support()
-    resultQueue = multiprocessing.Queue()
-    SendeventProcess(resultQueue)
+    # multiprocessing.freeze_support()
+    # resultQueue = multiprocessing.Queue()
+    # SendeventProcess(resultQueue)
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
