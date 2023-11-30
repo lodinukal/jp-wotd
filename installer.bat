@@ -1,0 +1,1 @@
+pyinstaller.exe installer.py --onefile -n installer

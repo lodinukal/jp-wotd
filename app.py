@@ -424,10 +424,15 @@ if __name__ == "__main__":
     tray.setVisible(True)
 
     menu = QMenu()
-    action = QWidgetAction(menu)
-    action.setText("Exit")
-    action.triggered.connect(app.quit)
-    menu.addAction(action)
+    action_exit = QWidgetAction(menu)
+    action_exit.setText("Exit")
+    action_exit.triggered.connect(app.quit)
+    menu.addAction(action_exit)
+
+    action_config = QWidgetAction(menu)
+    action_config.setText("Config")
+    action_config.triggered.connect(lambda: webbrowser.open("."))
+    menu.addAction(action_config)
 
     tray.setContextMenu(menu)
 
