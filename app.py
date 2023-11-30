@@ -40,6 +40,7 @@ def resource_path(relative_path):
     # broken atm, fix later
     return install_path / relative_path
 
+config_file = resource_path("config.yaml")
 
 with open(resource_path("words.csv"), "r", encoding="utf-8") as f:
     reader = csv.reader(f, delimiter=",", quotechar='"')
@@ -384,7 +385,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
-    config = Config.loadFromFile("config.yaml")
+    config = Config.loadFromFile(config_file)
     app.config = config
 
     windows = []
@@ -410,7 +411,7 @@ if __name__ == "__main__":
                 break
 
     def reloadWindows():
-        config = Config.loadFromFile("config.yaml")
+        config = Config.loadFromFile(config_file)
         app.config = config
         for i in range(len(windows)):
             windows[i].reload(config.frames[i])
@@ -440,7 +441,7 @@ if __name__ == "__main__":
     tray.setContextMenu(menu)
 
     rc = app.exec()
-    app.config.saveToFile("config.yaml")
+    app.config.saveToFile(config_file)
 
     sys.exit(rc)
 
