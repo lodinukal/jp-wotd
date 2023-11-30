@@ -24,9 +24,12 @@ audio = []  # 14
 day = round(datetime.now().timestamp() / 86400) * 4
 print(day)
 
+from pathlib import Path
+
+install_path = Path.home() / ".jp-wotd"
+
 
 def resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
     # try:
     #     # PyInstaller creates a temp folder and stores path in _MEIPASS
     #     base_path = sys._MEIPASS + "/resources"
@@ -35,7 +38,7 @@ def resource_path(relative_path):
 
     # return os.path.join(base_path, relative_path)
     # broken atm, fix later
-    return relative_path
+    return install_path / relative_path
 
 
 with open(resource_path("words.csv"), "r", encoding="utf-8") as f:
