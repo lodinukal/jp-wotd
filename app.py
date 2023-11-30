@@ -319,6 +319,11 @@ class Frame(QWidget):
                 self.config["lookat"] = (self.config["lookat"] - 1) % 4
                 self.progress.setValue(self.config["lookat"] + 1)
                 self.updateText()
+            if (
+                a0.key() == Qt.Key.Key_O
+                and a0.modifiers() == Qt.KeyboardModifier.ControlModifier
+            ):
+                webbrowser.open(".")  # open the config file
 
     def moveEvent(self, a0: QtGui.QMoveEvent | None) -> None:
         self.config["position"] = [self.x(), self.y()]
@@ -428,11 +433,6 @@ if __name__ == "__main__":
     action_exit.setText("Exit")
     action_exit.triggered.connect(app.quit)
     menu.addAction(action_exit)
-
-    action_config = QWidgetAction(menu)
-    action_config.setText("Config")
-    action_config.triggered.connect(lambda: webbrowser.open("."))
-    menu.addAction(action_config)
 
     tray.setContextMenu(menu)
 

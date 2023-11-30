@@ -18,6 +18,7 @@ Pull requests are welcome, I don't plan to work on this project a lot.
 ## Controls
 
 - Ctrl + N: Spawn a new window
+- Ctrl + O: Open config file folder
 - Escape: Close the program
 - Ctrl + W: Close the window
 - Ctrl + R: Reload from the config.yaml
