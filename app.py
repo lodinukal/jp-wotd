@@ -40,6 +40,7 @@ def resource_path(relative_path):
     # broken atm, fix later
     return install_path / relative_path
 
+
 config_file = resource_path("config.yaml")
 
 with open(resource_path("words.csv"), "r", encoding="utf-8") as f:
@@ -294,6 +295,7 @@ class Frame(QWidget):
     def keyPressEvent(self, a0: QtGui.QKeyEvent | None) -> None:
         if a0:
             if a0.key() == Qt.Key.Key_Escape:
+                self.app.saveConfig()
                 self.app.quit()
             if (
                 a0.key() == Qt.Key.Key_L
@@ -327,7 +329,12 @@ class Frame(QWidget):
                 a0.key() == Qt.Key.Key_O
                 and a0.modifiers() == Qt.KeyboardModifier.ControlModifier
             ):
-                webbrowser.open(".")  # open the config file
+                webbrowser.open(install_path)  # open the config file
+            if (
+                a0.key() == Qt.Key.Key_S
+                and a0.modifiers() == Qt.KeyboardModifier.ControlModifier
+            ):
+                self.app.saveConfig()
 
     def moveEvent(self, a0: QtGui.QMoveEvent | None) -> None:
         self.config["position"] = [self.x(), self.y()]
@@ -383,7 +390,7 @@ if __name__ == "__main__":
     # resultQueue = multiprocessing.Queue()
     # SendeventProcess(resultQueue)
     app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(False)
+    app.setQuitOnLastWindowClosed(True)
 
     config = Config.loadFromFile(config_file)
     app.config = config
@@ -416,9 +423,13 @@ if __name__ == "__main__":
         for i in range(len(windows)):
             windows[i].reload(config.frames[i])
 
+    def saveConfig():
+        app.config.saveToFile(config_file)
+
     app.newWindow = newWindow
     app.deleteWindow = deleteWindow
     app.reloadWindows = reloadWindows
+    app.saveConfig = saveConfig
 
     for frame in config.frames:
         window = Frame(frame)
@@ -441,7 +452,6 @@ if __name__ == "__main__":
     tray.setContextMenu(menu)
 
     rc = app.exec()
-    app.config.saveToFile(config_file)
 
     sys.exit(rc)
 
