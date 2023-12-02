@@ -1,1 +1,1 @@
-pyinstaller.exe installer.py --onefile -n installer
+pyinstaller.exe installer.py --onefile -n installer -o jp-wotd
